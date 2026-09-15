@@ -29,6 +29,7 @@ export function StudentDetailClient({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(student.name);
   const [roll, setRoll] = useState(student.roll_no);
+  const [className, setClassName] = useState(student.class_name || "");
   const [busy, setBusy] = useState(false);
   const [justLogged, setJustLogged] = useState(false);
   const [justFine, setJustFine] = useState(false);
@@ -87,7 +88,7 @@ export function StudentDetailClient({
       const res = await fetch(`/api/students/${student.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, roll_no: roll }),
+        body: JSON.stringify({ name, roll_no: roll, class_name: className || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -193,6 +194,19 @@ export function StudentDetailClient({
                 className="field"
               />
             </label>
+            <label className="block">
+              <span className="t13 mb-1.5 block font-medium text-muted">Class</span>
+              <select
+                value={className}
+                onChange={(e) => setClassName(e.target.value)}
+                className="field"
+              >
+                <option value="">No class</option>
+                <option value="RCSB 1">RCSB 1</option>
+                <option value="RCSB 2">RCSB 2</option>
+                <option value="RCSB 3">RCSB 3</option>
+              </select>
+            </label>
             <div className="flex gap-2 pt-1">
               <button
                 type="button"
@@ -205,9 +219,10 @@ export function StudentDetailClient({
               <button
                 type="button"
                 onClick={() => {
-                  setEditing(false);
-                  setName(student.name);
-                  setRoll(student.roll_no);
+                setEditing(false);
+                setName(student.name);
+                setRoll(student.roll_no);
+                setClassName(student.class_name || "");
                 }}
                 className="btn btn-glass flex-1 t15"
               >

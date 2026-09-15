@@ -18,7 +18,8 @@ function matchesQuery(student: Student, q: string) {
   if (!needle) return true;
   return (
     student.name.toLowerCase().includes(needle) ||
-    student.roll_no.toLowerCase().includes(needle)
+    student.roll_no.toLowerCase().includes(needle) ||
+    (student.class_name && student.class_name.toLowerCase().includes(needle))
   );
 }
 
@@ -146,10 +147,7 @@ export function RosterClient({
     <div className="pb-4">
       <header className="mb-5">
         <div className="flex items-end justify-between gap-3">
-          <div>
-            <p className="t13 font-medium text-muted">Computer Class</p>
-            <h1 className="t24 font-semibold text-ink">Roster</h1>
-          </div>
+          <h1 className="t24 font-semibold text-ink">Roster</h1>
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}
@@ -296,11 +294,13 @@ export function RosterClient({
                     <span className="num t13 shrink-0 text-muted">
                       {student.roll_no}
                     </span>
+                    {student.class_name ? (
+                      <span className="t12 font-medium text-accent-bright shrink-0">
+                        {student.class_name}
+                      </span>
+                    ) : null}
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                    {student.class_name ? (
-                      <span className="t12 text-muted">{student.class_name}</span>
-                    ) : null}
                     {justLoggedId === student.id ? (
                       exhausted ? (
                         <span className="badge badge-fine badge-settle">
