@@ -42,7 +42,7 @@ export function SettingsClient({ initial }: { initial: Settings }) {
       </h1>
       <p className="mt-2 max-w-[36ch] text-[14px] leading-relaxed text-muted">
         Change fine amount and how many free chances each student gets. Stored
-        in the database — no code edits needed.
+        in the database. No code edits needed.
       </p>
 
       <form
@@ -73,7 +73,7 @@ export function SettingsClient({ initial }: { initial: Settings }) {
             required
           />
           <span className="mt-1.5 block text-[12px] text-muted">
-            Default is 1. Raising this only affects future logs — used chances
+            Default is 1. Raising this only affects future logs. Used chances
             already recorded stay used.
           </span>
         </label>

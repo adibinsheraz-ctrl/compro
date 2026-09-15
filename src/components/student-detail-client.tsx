@@ -152,7 +152,7 @@ export function StudentDetailClient({
               {student.name}
             </h1>
             <p className="mt-2 text-[14px] font-medium text-muted">
-              Roll #{student.roll_no}
+              Roll {student.roll_no}
             </p>
           </>
         ) : (

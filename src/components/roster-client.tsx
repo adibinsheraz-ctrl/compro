@@ -129,7 +129,7 @@ export function RosterClient({
       if (data.result_type === "chance_used") {
         toast({
           title: "Chance used",
-          detail: `${student.name} — warning recorded. No fine.`,
+          detail: `${student.name}: warning recorded. No fine.`,
           tone: "amber",
         });
       } else {
@@ -253,7 +253,7 @@ export function RosterClient({
                       {student.name}
                     </p>
                     <span className="shrink-0 text-[12px] font-semibold text-muted">
-                      #{student.roll_no}
+                      {student.roll_no}
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-2 text-[12px] font-semibold">

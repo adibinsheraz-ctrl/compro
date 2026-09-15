@@ -56,7 +56,7 @@ export function LoginForm() {
           Chance Tracker
         </h1>
         <p className="mt-3 max-w-[28ch] text-[15px] leading-relaxed text-muted">
-          One chance. After that, every miss adds a fine — automatically.
+          One chance. After that, every miss adds a fine, automatically.
         </p>
 
         <form onSubmit={onSubmit} className="mt-8 space-y-4">
