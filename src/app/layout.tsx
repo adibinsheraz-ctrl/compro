@@ -1,17 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  variable: "--font-jakarta",
+const plexSans = IBM_Plex_Sans({
+  variable: "--font-plex-sans",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+// BespokeStencil — display face for all site headings, self-hosted.
+const bespokeStencil = localFont({
+  src: "../fonts/BespokeStencil-Variable.woff2",
+  variable: "--font-heading",
+  weight: "100 900",
+  display: "swap",
+});
+
+// Oh My Notes — handwriting face for body/paragraph text, self-hosted.
+const ohMyNotes = localFont({
+  src: "../fonts/OhMyNotes.woff",
+  variable: "--font-notes",
+  weight: "400",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -25,12 +42,15 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#13221f",
+  themeColor: "#14181A",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${playfair.variable} ${jakarta.variable} h-full`}>
+    <html
+      lang="en"
+      className={`${plexSans.variable} ${plexMono.variable} ${bespokeStencil.variable} ${ohMyNotes.variable} h-full`}
+    >
       <body className="min-h-full antialiased">{children}</body>
     </html>
   );

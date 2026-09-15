@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "@/components/toast";
 import { ConfirmModal } from "@/components/confirm-modal";
 import {
@@ -30,11 +30,22 @@ export function StudentDetailClient({
   const [name, setName] = useState(student.name);
   const [roll, setRoll] = useState(student.roll_no);
   const [busy, setBusy] = useState(false);
+  const [justLogged, setJustLogged] = useState(false);
+  const [justFine, setJustFine] = useState(false);
   const [confirmUndo, setConfirmUndo] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const fineRef = useRef<HTMLParagraphElement>(null);
 
   const exhausted = isChanceExhausted(student, settings);
   const left = chanceRemaining(student, settings);
+
+  // The one deliberate motion moment: badge settles into its new color and the
+  // fine numeral gives a brief weighty bump when an incident is logged.
+  useEffect(() => {
+    if (!justLogged) return;
+    const id = window.setTimeout(() => setJustLogged(false), 600);
+    return () => window.clearTimeout(id);
+  }, [justLogged]);
 
   async function logIncident() {
     if (busy) return;
@@ -45,22 +56,24 @@ export function StudentDetailClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Log failed", detail: data.error, tone: "coral" });
+        toast({ title: "Log failed", detail: data.error, tone: "fine" });
         return;
       }
       setStudent(data.student as Student);
       setIncidents((prev) => [data.incident as Incident, ...prev]);
+      setJustFine(data.result_type === "fine");
+      setJustLogged(true);
       if (data.result_type === "chance_used") {
         toast({
           title: "Chance used",
           detail: "Warning recorded. No fine this time.",
-          tone: "amber",
+          tone: "warn",
         });
       } else {
         toast({
           title: `Fine +Rs ${data.amount}`,
           detail: `Total now Rs ${(data.student as Student).total_fine}`,
-          tone: "coral",
+          tone: "fine",
         });
       }
     } finally {
@@ -78,12 +91,12 @@ export function StudentDetailClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Update failed", detail: data.error, tone: "coral" });
+        toast({ title: "Update failed", detail: data.error, tone: "fine" });
         return;
       }
       setStudent(data.student as Student);
       setEditing(false);
-      toast({ title: "Saved", tone: "teal" });
+      toast({ title: "Saved", tone: "ink" });
     } finally {
       setBusy(false);
     }
@@ -97,7 +110,7 @@ export function StudentDetailClient({
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Undo failed", detail: data.error, tone: "coral" });
+        toast({ title: "Undo failed", detail: data.error, tone: "fine" });
         return;
       }
       setStudent(data.student as Student);
@@ -122,7 +135,7 @@ export function StudentDetailClient({
       });
       if (!res.ok) {
         const data = await res.json();
-        toast({ title: "Delete failed", detail: data.error, tone: "coral" });
+        toast({ title: "Delete failed", detail: data.error, tone: "fine" });
         return;
       }
       toast({ title: "Student removed", tone: "ink" });
@@ -134,13 +147,19 @@ export function StudentDetailClient({
   }
 
   return (
-    <div className="animate-rise pb-6">
+    <div className="pb-6">
       <Link
         href="/"
-        className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-muted"
+        className="btn-quiet t13 -ml-2 px-2"
       >
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-          <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path
+            d="M10 3L5 8l5 5"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
         Roster
       </Link>
@@ -148,33 +167,40 @@ export function StudentDetailClient({
       <header className="mt-4">
         {!editing ? (
           <>
-            <h1 className="font-display text-[2rem] font-extrabold leading-none text-ink">
-              {student.name}
-            </h1>
-            <p className="mt-2 text-[14px] font-medium text-muted">
-              Roll {student.roll_no}
-            </p>
+            <h1 className="t24 font-semibold text-ink">{student.name}</h1>
+            <div className="mt-1 flex items-baseline gap-3">
+              <p className="num t13 text-muted">Roll {student.roll_no}</p>
+              {student.class_name ? (
+                <p className="t13 text-muted">{student.class_name}</p>
+              ) : null}
+            </div>
           </>
         ) : (
           <div className="space-y-3">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-xl border border-[var(--line)] bg-paper px-3.5 py-3 text-[16px] outline-none focus:border-teal"
-            />
-            <input
-              value={roll}
-              onChange={(e) => setRoll(e.target.value)}
-              className="w-full rounded-xl border border-[var(--line)] bg-paper px-3.5 py-3 text-[16px] outline-none focus:border-teal"
-            />
-            <div className="flex gap-2">
+            <label className="block">
+              <span className="t13 mb-1.5 block font-medium text-muted">Name</span>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="field"
+              />
+            </label>
+            <label className="block">
+              <span className="t13 mb-1.5 block font-medium text-muted">Roll number</span>
+              <input
+                value={roll}
+                onChange={(e) => setRoll(e.target.value)}
+                className="field"
+              />
+            </label>
+            <div className="flex gap-2 pt-1">
               <button
                 type="button"
                 onClick={saveEdit}
                 disabled={busy}
-                className="pressable flex-1 rounded-xl bg-teal py-3 text-[14px] font-semibold text-white"
+                className="btn btn-primary flex-1 t15"
               >
-                Save
+                Save Changes
               </button>
               <button
                 type="button"
@@ -183,7 +209,7 @@ export function StudentDetailClient({
                   setName(student.name);
                   setRoll(student.roll_no);
                 }}
-                className="pressable flex-1 rounded-xl bg-fog py-3 text-[14px] font-semibold text-ink"
+                className="btn btn-glass flex-1 t15"
               >
                 Cancel
               </button>
@@ -192,20 +218,31 @@ export function StudentDetailClient({
         )}
       </header>
 
-      <div className="mt-6 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-[var(--line)] bg-paper p-4">
-          <p className="text-[12px] font-semibold text-muted">Chance</p>
-          <p
-            className={`font-display mt-1 text-[1.35rem] font-extrabold ${
-              exhausted ? "text-coral" : "text-teal-deep"
-            }`}
-          >
-            {exhausted ? "Used" : left === 1 ? "Open" : `${left} left`}
+      <div className="ledger-strip mt-5 grid grid-cols-2">
+        <div className="pr-4 py-3">
+          <p className="t12 text-muted">Chance standing</p>
+          <p className="mt-1">
+            {exhausted ? (
+              <span className="badge badge-fine badge-settle">Chance used</span>
+            ) : (
+              <span
+                className={`badge badge-clear ${justLogged && !justFine ? "badge-settle" : ""} ${
+                  left === 1 ? "badge-settle" : ""
+                }`}
+              >
+                {left === 1 ? "Chance open" : `${left} chances left`}
+              </span>
+            )}
           </p>
         </div>
-        <div className="rounded-2xl border border-[var(--line)] bg-paper p-4">
-          <p className="text-[12px] font-semibold text-muted">Fine owed</p>
-          <p className="font-display mt-1 text-[1.35rem] font-extrabold text-ink">
+        <div className="pl-4 py-3">
+          <p className="t12 text-muted">Fine owed</p>
+          <p
+            ref={fineRef}
+            className={`num t24 mt-0.5 font-medium ${
+              student.total_fine > 0 ? "text-fine-text" : "text-ink"
+            } ${justLogged && justFine ? "num-bump" : ""}`}
+          >
             Rs {student.total_fine}
           </p>
         </div>
@@ -215,81 +252,91 @@ export function StudentDetailClient({
         type="button"
         disabled={busy}
         onClick={logIncident}
-        className={`pressable mt-5 w-full rounded-2xl py-4 text-[16px] font-bold text-white shadow-[var(--shadow)] disabled:opacity-60 ${
-          exhausted ? "bg-coral" : "bg-amber"
+        className={`btn font-display mt-6 w-full t15 font-semibold ${
+          exhausted ? "btn-danger" : "btn-accent"
         }`}
       >
         {busy
           ? "Saving…"
           : exhausted
-            ? `Log incident   +Rs ${settings.fine_amount}`
-            : "Log incident   use chance"}
+            ? `Log Incident (+Rs ${settings.fine_amount})`
+            : "Log Incident (Use Chance)"}
       </button>
 
-      <div className="mt-6 flex gap-2">
+      <div className="mt-4 flex gap-2">
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="pressable flex-1 rounded-xl bg-fog py-3 text-[13px] font-semibold text-ink"
+          className="btn btn-glass flex-1 t13"
         >
-          Edit
+          Edit Details
         </button>
         <button
           type="button"
           onClick={() => setShowLog((v) => !v)}
-          className="pressable flex-1 rounded-xl bg-fog py-3 text-[13px] font-semibold text-ink"
+          aria-expanded={showLog}
+          className="btn btn-glass flex-1 t13"
         >
-          {showLog ? "Hide log" : "History"}
+          {showLog ? "Hide Log" : "Incident Log"}
         </button>
       </div>
 
       {showLog ? (
-        <div className="animate-pop mt-4 space-y-2">
-          {incidents.length === 0 ? (
-            <p className="rounded-xl border border-dashed border-[var(--line)] px-3 py-6 text-center text-[13px] text-muted">
-              No incidents yet.
-            </p>
-          ) : (
-            incidents.map((inc) => (
-              <div
-                key={inc.id}
-                className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-paper px-3.5 py-3"
-              >
-                <div>
-                  <p className="text-[14px] font-semibold text-ink">
-                    {inc.type === "chance_used" ? "Chance used" : "Fine"}
-                  </p>
-                  <p className="text-[12px] text-muted">
-                    {new Date(inc.created_at).toLocaleString()}
+        <div className="mt-5">
+          <div className="register">
+            {incidents.length === 0 ? (
+              <p className="t13 px-1 py-6 text-center text-muted">
+                Nothing logged yet. The first incident for this student will
+                appear here.
+              </p>
+            ) : (
+              incidents.map((inc) => (
+                <div
+                  key={inc.id}
+                  className="register-row items-center justify-between !py-2.5"
+                >
+                  <div>
+                    <p className="t13 font-medium text-ink">
+                      {inc.type === "chance_used" ? "Chance used" : "Fine charged"}
+                    </p>
+                    <p className="num t12 text-muted">
+                      {new Date(inc.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <p
+                    className={`num t13 font-medium ${
+                      inc.amount > 0 ? "text-fine-text" : "text-muted"
+                    }`}
+                  >
+                    {inc.amount > 0 ? `Rs ${inc.amount}` : "nil"}
                   </p>
                 </div>
-                <p className="text-[13px] font-bold text-muted">
-                  {inc.amount > 0 ? `Rs ${inc.amount}` : "nil"}
-                </p>
-              </div>
-            ))
-          )}
+              ))
+            )}
+          </div>
         </div>
       ) : null}
 
-      <div className="mt-10 rounded-2xl border border-dashed border-[var(--line)] p-4">
-        <p className="text-[12px] font-semibold text-muted">Corrections</p>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted">
+      <div className="mt-10 rounded-xl border border-dashed border-[var(--line-strong)] p-4">
+        <p className="t13 font-medium text-muted">Corrections</p>
+        <p className="t13 mt-1 leading-relaxed text-muted">
           Only for genuine mistakes. This is intentionally hard to reach.
         </p>
 
         {!confirmUndo ? (
-          <button
-            type="button"
-            onClick={() => setConfirmUndo(true)}
-            disabled={incidents.length === 0 || busy}
-            className="mt-3 text-[13px] font-semibold text-ink underline decoration-[var(--line)] underline-offset-4 disabled:opacity-40"
-          >
-            Undo last incident…
-          </button>
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setConfirmUndo(true)}
+              disabled={incidents.length === 0 || busy}
+              className="btn-quiet t13"
+            >
+              Undo last incident…
+            </button>
+          </div>
         ) : (
-          <div className="animate-pop mt-3 space-y-2 rounded-xl bg-amber/10 p-3">
-            <p className="text-[13px] font-medium text-ink">
+          <div className="sheet-in mt-3 space-y-2.5 rounded-lg border border-[rgba(198,146,58,0.3)] bg-[rgba(198,146,58,0.08)] p-3">
+            <p className="t13 text-ink">
               Undo the most recent log for {student.name}? This can restore a
               chance if that log was the chance.
             </p>
@@ -298,14 +345,14 @@ export function StudentDetailClient({
                 type="button"
                 onClick={undoLast}
                 disabled={busy}
-                className="pressable flex-1 rounded-lg bg-ink py-2.5 text-[13px] font-semibold text-white"
+                className="btn btn-accent flex-1 t13"
               >
                 Yes, undo it
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmUndo(false)}
-                className="pressable flex-1 rounded-lg bg-paper py-2.5 text-[13px] font-semibold text-ink"
+                className="btn btn-glass flex-1 t13"
               >
                 Cancel
               </button>
@@ -313,16 +360,24 @@ export function StudentDetailClient({
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={() => setConfirmDelete(true)}
-          className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-coral"
-        >
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-            <path d="M2 4h12M5 4V2.5A1.5 1.5 0 016.5 1h3A1.5 1.5 0 0111 2.5V4m2 0l-.8 9.2A1.5 1.5 0 0110.7 14.5H5.3A1.5 1.5 0 013.8 13.2L3 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          Remove student
-        </button>
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setConfirmDelete(true)}
+            className="btn-quiet t13 !text-fine-text hover:!text-[#efb3a3]"
+          >
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path
+                d="M2 4h12M5 4V2.5A1.5 1.5 0 016.5 1h3A1.5 1.5 0 0111 2.5V4m2 0l-.8 9.2A1.5 1.5 0 0110.7 14.5H5.3A1.5 1.5 0 013.8 13.2L3 4"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Remove student
+          </button>
+        </div>
       </div>
 
       <ConfirmModal
@@ -330,7 +385,7 @@ export function StudentDetailClient({
         title="Remove student?"
         detail={`This will permanently delete ${student.name} and their entire incident history. This cannot be undone.`}
         confirmLabel="Delete forever"
-        tone="coral"
+        tone="fine"
         busy={busy}
         onConfirm={removeStudent}
         onCancel={() => setConfirmDelete(false)}

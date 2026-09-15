@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
 const links = [
-  { href: "/", label: "Class" },
+  { href: "/", label: "Roster" },
   { href: "/settings", label: "Settings" },
   { href: "/about", label: "About" },
 ];
@@ -20,21 +20,23 @@ export function BottomNav() {
   }
 
   return (
-    <nav className="sticky bottom-0 z-40 mt-auto border-t border-[var(--line)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] px-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl">
-      <div className="flex items-center gap-1">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,calc(env(safe-area-inset-bottom)+0.75rem))] pt-2"
+      aria-label="Primary"
+    >
+      <div className="glass mx-auto flex w-fit max-w-full items-center gap-1 rounded-2xl p-1.5">
         {links.map((link) => {
           const active =
-            link.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(link.href);
+            link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`pressable flex-1 rounded-xl px-2 py-2.5 text-center text-[13px] font-semibold transition-colors ${
+              aria-current={active ? "page" : undefined}
+              className={`t13 rounded-xl px-3.5 py-2.5 font-medium transition-colors ${
                 active
-                  ? "bg-ink text-white"
-                  : "text-muted hover:bg-fog/70"
+                  ? "bg-[var(--accent)] text-[#f2f7f4]"
+                  : "text-muted hover:text-ink"
               }`}
             >
               {link.label}
@@ -44,7 +46,7 @@ export function BottomNav() {
         <button
           type="button"
           onClick={logout}
-          className="pressable rounded-xl px-3 py-2.5 text-[13px] font-semibold text-muted hover:bg-fog/70"
+          className="t13 rounded-xl px-3.5 py-2.5 font-medium text-muted transition-colors hover:text-ink"
         >
           Out
         </button>

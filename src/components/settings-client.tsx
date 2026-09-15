@@ -23,56 +23,54 @@ export function SettingsClient({ initial }: { initial: Settings }) {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast({ title: "Save failed", detail: data.error, tone: "coral" });
+        toast({ title: "Save failed", detail: data.error, tone: "fine" });
         return;
       }
       setFine(String(data.settings.fine_amount));
       setChances(String(data.settings.chances_allowed));
-      toast({ title: "Settings saved", tone: "teal" });
+      toast({ title: "Settings saved", tone: "ink" });
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <div className="animate-rise pb-6">
-      <p className="text-[12px] font-semibold text-teal">Admin</p>
-      <h1 className="font-display mt-1 text-[1.85rem] font-extrabold text-ink">
-        Settings
-      </h1>
-      <p className="mt-2 max-w-[36ch] text-[14px] leading-relaxed text-muted">
-        Change fine amount and how many free chances each student gets. Stored
-        in the database. No code edits needed.
+    <div className="pb-6">
+      <p className="t13 font-medium text-muted">Admin</p>
+      <h1 className="t24 mt-1 font-semibold text-ink">Settings</h1>
+      <p className="t15 mt-2 max-w-[40ch] leading-relaxed text-muted">
+        Change the fine amount and how many free chances each student gets.
+        Stored in the database. No code edits needed.
       </p>
 
       <form
         onSubmit={onSave}
-        className="mt-6 space-y-4 rounded-2xl border border-[var(--line)] bg-paper p-4 shadow-[var(--shadow)]"
+        className="mt-6 space-y-4 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] p-4"
       >
         <label className="block">
-          <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft">
+          <span className="t13 mb-1.5 block font-medium text-ink">
             Fine amount (Rs)
           </span>
           <input
             inputMode="numeric"
             value={fine}
             onChange={(e) => setFine(e.target.value)}
-            className="w-full rounded-xl border border-[var(--line)] bg-surface px-3.5 py-3 text-[16px] outline-none focus:border-teal"
+            className="field num"
             required
           />
         </label>
         <label className="block">
-          <span className="mb-1.5 block text-[13px] font-semibold text-ink-soft">
+          <span className="t13 mb-1.5 block font-medium text-ink">
             Chances allowed
           </span>
           <input
             inputMode="numeric"
             value={chances}
             onChange={(e) => setChances(e.target.value)}
-            className="w-full rounded-xl border border-[var(--line)] bg-surface px-3.5 py-3 text-[16px] outline-none focus:border-teal"
+            className="field num"
             required
           />
-          <span className="mt-1.5 block text-[12px] text-muted">
+          <span className="t12 mt-1.5 block leading-relaxed text-muted">
             Default is 1. Raising this only affects future logs. Used chances
             already recorded stay used.
           </span>
@@ -80,9 +78,9 @@ export function SettingsClient({ initial }: { initial: Settings }) {
         <button
           type="submit"
           disabled={saving}
-          className="pressable w-full rounded-xl bg-ink py-3.5 text-[15px] font-semibold text-white disabled:opacity-60"
+          className="btn btn-primary w-full t15"
         >
-          {saving ? "Saving…" : "Save settings"}
+          {saving ? "Saving…" : "Save Changes"}
         </button>
       </form>
     </div>

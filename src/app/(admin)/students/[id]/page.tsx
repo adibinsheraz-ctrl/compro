@@ -8,6 +8,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export default async function StudentPage({ params }: Props) {
   const { id } = await params;
+  // All three reads are independent — run them in one round-trip window.
   const [student, settings, incidents] = await Promise.all([
     getStudent(id),
     getSettings(),

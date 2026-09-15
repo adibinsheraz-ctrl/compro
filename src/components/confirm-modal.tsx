@@ -8,7 +8,7 @@ export function ConfirmModal({
   detail,
   confirmLabel = "Confirm",
   cancelLabel = "Cancel",
-  tone = "coral",
+  tone = "fine",
   busy = false,
   onConfirm,
   onCancel,
@@ -18,7 +18,7 @@ export function ConfirmModal({
   detail: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  tone?: "coral" | "ink" | "amber";
+  tone?: "fine" | "ink" | "warn";
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -34,31 +34,35 @@ export function ConfirmModal({
 
   if (!open) return null;
 
-  const confirmBg =
-    tone === "coral" ? "bg-coral" : tone === "amber" ? "bg-amber" : "bg-ink";
+  const confirmClass =
+    tone === "fine"
+      ? "btn-danger"
+      : tone === "warn"
+        ? "btn-accent"
+        : "btn-primary";
 
   return (
     <div
-      className="modal-backdrop animate-pop"
+      className="modal-backdrop"
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-title"
       onClick={onCancel}
     >
-      <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
-        <h2
-          id="confirm-title"
-          className="font-display text-[1.25rem] font-semibold text-ink"
-        >
+      <div
+        className="modal-sheet sheet-in"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="confirm-title" className="t18 font-semibold text-ink">
           {title}
         </h2>
-        <p className="mt-2 text-[14px] leading-relaxed text-muted">{detail}</p>
+        <p className="t13 mt-2 leading-relaxed text-muted">{detail}</p>
         <div className="mt-5 flex gap-2">
           <button
             type="button"
             onClick={onCancel}
             disabled={busy}
-            className="pressable flex-1 rounded-2xl bg-fog py-3 text-[14px] font-semibold text-ink"
+            className="btn btn-glass flex-1 t15"
           >
             {cancelLabel}
           </button>
@@ -66,7 +70,7 @@ export function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={busy}
-            className={`pressable flex-1 rounded-2xl py-3 text-[14px] font-semibold text-white disabled:opacity-60 ${confirmBg}`}
+            className={`btn flex-1 t15 ${confirmClass}`}
           >
             {busy ? "Please wait…" : confirmLabel}
           </button>

@@ -1,38 +1,84 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #13221f;
-  --ink-soft: #233b36;
-  --mist: #edf3f0;
-  --fog: #dde7e2;
-  --surface: #f7faf8;
-  --paper: #ffffff;
-  --teal: #1d7b6c;
-  --teal-deep: #135d51;
-  --amber: #c47c2a;
-  --coral: #bf4d40;
-  --muted: #5e756f;
-  --line: rgba(19, 34, 31, 0.07);
-  --shadow: 0 10px 32px -4px rgba(19, 34, 31, 0.06), 0 2px 8px -2px rgba(19, 34, 31, 0.03);
-  --shadow-lg: 0 20px 48px -10px rgba(19, 34, 31, 0.14), 0 8px 18px -4px rgba(19, 34, 31, 0.05);
-  --radius: 20px;
+  /* Palette — graphite instrument panel, ledger status inks */
+  --bg: #14181a;
+  --surface: #1c2124;
+  --surface-raised: #232a2d;
+  --ink: #edede8;
+  --muted: #8b9290;
+  --line: rgba(237, 237, 232, 0.09);
+  --line-strong: rgba(237, 237, 232, 0.16);
+
+  --accent: #4c7a73;
+  --accent-hover: #558a81;
+  --accent-press: #45706a;
+
+  --fine: #b4432e; /* brick red — deficit ink, fine owed only */
+  --warn: #c6923a; /* ochre — chance used */
+  --clear: #6e9b7a; /* sage — clear status */
+
+  /* Lifted text variants of status colors: the raw hexes sit below AA
+     contrast at small sizes on graphite; these keep meaning, pass contrast. */
+  --fine-text: #e08a73;
+  --warn-text: #d9a854;
+  --clear-text: #8fbd9a;
+
+  --glass-bg: rgba(28, 33, 36, 0.72);
+  --glass-bg-soft: rgba(35, 42, 45, 0.55);
+  --glass-line: rgba(237, 237, 232, 0.12);
+  --glass-highlight: rgba(237, 237, 232, 0.06);
+  --glass-blur: 16px;
+
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 @theme inline {
-  --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-mist: var(--mist);
-  --color-fog: var(--fog);
+  --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-paper: var(--paper);
-  --color-teal: var(--teal);
-  --color-teal-deep: var(--teal-deep);
-  --color-amber: var(--amber);
-  --color-coral: var(--coral);
+  --color-raised: var(--surface-raised);
+  --color-ink: var(--ink);
   --color-muted: var(--muted);
-  --font-display: var(--font-playfair);
-  --font-sans: var(--font-jakarta);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-fine: var(--fine);
+  --color-warn: var(--warn);
+  --color-clear: var(--clear);
+  --color-fine-text: var(--fine-text);
+  --color-warn-text: var(--warn-text);
+  --color-clear-text: var(--clear-text);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+}
+
+/* Type scale: 12 / 13 / 15 / 18 / 24 / 32 */
+.t12 {
+  font-size: 12px;
+  line-height: 1.45;
+}
+.t13 {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.t15 {
+  font-size: 15px;
+  line-height: 1.55;
+}
+.t18 {
+  font-size: 18px;
+  line-height: 1.35;
+}
+.t24 {
+  font-size: 24px;
+  line-height: 1.2;
+}
+.t32 {
+  font-size: 32px;
+  line-height: 1.12;
 }
 
 * {
@@ -41,31 +87,309 @@
 
 html {
   height: 100%;
+  color-scheme: dark;
 }
 
 body {
   min-height: 100%;
   margin: 0;
   color: var(--ink);
-  background:
-    radial-gradient(1200px 700px at 15% -10%, rgba(29, 123, 108, 0.08), transparent 60%),
-    radial-gradient(900px 500px at 95% 5%, rgba(196, 124, 42, 0.06), transparent 50%),
-    linear-gradient(180deg, var(--mist) 0%, var(--surface) 35%, var(--surface) 100%);
-  background-attachment: fixed;
-  font-family: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  background-color: var(--bg);
+  font-family: var(--font-notes), var(--font-sans), system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1,
 h2,
-h3,
-.font-display {
-  font-family: var(--font-playfair), Georgia, serif;
-  letter-spacing: -0.015em;
+h3 {
+  font-family: var(--font-heading), var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.012em;
 }
 
 ::selection {
-  background: rgba(29, 123, 108, 0.18);
+  background: rgba(76, 122, 115, 0.4);
 }
+
+/* ————— Register chrome ————— */
+
+.app-shell {
+  width: min(640px, 100%);
+  margin-inline: auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: calc(5.25rem + var(--safe-bottom));
+}
+
+.num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+/* BespokeStencil display face — headings and primary action buttons */
+.font-display {
+  font-family: var(--font-heading), var(--font-sans), system-ui, sans-serif;
+}
+
+.register {
+  border-top: 1px solid var(--line);
+}
+
+.register-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding-block: 0.7rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger-strip {
+  border-block: 1px solid var(--line);
+}
+
+.ledger-strip > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.field {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 0.8rem 0.9rem;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field::placeholder {
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+.field:focus-visible {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(76, 122, 115, 0.25);
+}
+
+/* ————— Glass ————— */
+
+.glass {
+  background: var(--glass-bg-soft);
+  border: 1px solid var(--glass-line);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 8px 24px rgba(8, 10, 11, 0.25);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.15);
+}
+
+.glass-strong {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-line);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 18px 40px rgba(8, 10, 11, 0.45);
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) * 1.5)) saturate(1.2);
+  backdrop-filter: blur(calc(var(--glass-blur) * 1.5)) saturate(1.2);
+}
+
+/* ————— Buttons: Claude-classic ————— */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  letter-spacing: -0.006em;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease,
+    opacity 0.15s ease,
+    transform 0.1s ease;
+  min-height: 44px;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Primary — the signature Claude CTA: warm ivory block on graphite */
+.btn-primary {
+  background: var(--ink);
+  color: #14181a;
+  border-color: var(--ink);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #ffffff;
+  border-color: #ffffff;
+}
+
+/* Accent — slate teal, for the one decisive action */
+.btn-accent {
+  background: var(--accent);
+  color: #f2f7f4;
+  border-color: var(--accent);
+}
+
+.btn-accent:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+/* Secondary — frosted glass over the panel */
+.btn-glass {
+  background: var(--glass-bg-soft);
+  border-color: var(--glass-line);
+  color: var(--ink);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  backdrop-filter: blur(10px) saturate(1.1);
+}
+
+.btn-glass:hover:not(:disabled) {
+  background: rgba(45, 54, 58, 0.75);
+  border-color: var(--line-strong);
+}
+
+.btn-danger {
+  background: var(--fine);
+  color: #fbf1ee;
+  border-color: var(--fine);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #c24b35;
+  border-color: #c24b35;
+}
+
+/* Quiet text button — hairline underline, like a ledger correction note */
+.btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.15s ease;
+}
+
+.btn-quiet:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.btn-quiet:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ————— Status badges: the only prominent home of status color ————— */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  transition:
+    background-color 0.35s cubic-bezier(0.3, 0, 0.2, 1),
+    color 0.35s cubic-bezier(0.3, 0, 0.2, 1),
+    border-color 0.35s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  flex: none;
+}
+
+.badge-clear {
+  color: var(--clear-text);
+  background: rgba(110, 155, 122, 0.13);
+  border: 1px solid rgba(110, 155, 122, 0.28);
+}
+
+.badge-warn {
+  color: var(--warn-text);
+  background: rgba(198, 146, 58, 0.13);
+  border: 1px solid rgba(198, 146, 58, 0.3);
+}
+
+.badge-fine {
+  color: var(--fine-text);
+  background: rgba(180, 67, 46, 0.15);
+  border: 1px solid rgba(180, 67, 46, 0.34);
+}
+
+/* The single deliberate motion moment: badge color settle + numeral bump */
+@keyframes settle {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.09);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bump {
+  0% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.badge-settle {
+  animation: settle 0.5s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+.num-bump {
+  display: inline-block;
+  animation: bump 0.5s cubic-bezier(0.3, 0, 0.2, 1);
+}
+
+/* ————— Keyboard focus ————— */
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.field:focus-visible {
+  outline: none; /* field has its own border+ring treatment */
+}
+
+/* ————— Modal ————— */
 
 .modal-backdrop {
   position: fixed;
@@ -75,87 +399,87 @@ h3,
   align-items: center;
   justify-content: center;
   padding: 1.25rem;
-  background: rgba(14, 28, 25, 0.42);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(10, 13, 14, 0.6);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .modal-sheet {
   width: min(420px, 100%);
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 1.6rem;
-  box-shadow: var(--shadow-lg);
+  background: rgba(28, 33, 36, 0.92);
+  border: 1px solid var(--glass-line);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 24px 60px rgba(5, 7, 8, 0.5);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
 }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pop {
-  0% {
-    transform: scale(0.96);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(26, 138, 120, 0.35);
-  }
-  100% {
-    box-shadow: 0 0 0 14px rgba(26, 138, 120, 0);
-  }
-}
-
-.animate-rise {
-  animation: rise 0.45s ease-out both;
-}
-
-.animate-pop {
-  animation: pop 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+/* ————— Motion discipline ————— */
 
 .pressable {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform 0.1s ease;
 }
 
 .pressable:active {
   transform: scale(0.98);
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.toast-in {
+  animation: toast-in 0.2s ease-out both;
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.sheet-in {
+  animation: sheet-in 0.18s ease-out both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise,
-  .animate-pop,
-  .pressable {
-    animation: none !important;
-    transition: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
 input,
 button,
-textarea {
+textarea,
+select {
   font: inherit;
 }
 
-.app-shell {
-  width: min(480px, 100%);
-  margin-inline: auto;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: calc(1rem + var(--safe-bottom));
+/* Consistent dark form controls */
+select.field {
+  appearance: none;
+  cursor: pointer;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }

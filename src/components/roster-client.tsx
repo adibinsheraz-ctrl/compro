@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "@/components/toast";
-import { ConfirmModal } from "@/components/confirm-modal";
 import {
   chanceRemaining,
   isChanceExhausted,
@@ -23,6 +22,19 @@ function matchesQuery(student: Student, q: string) {
   );
 }
 
+function statusBadge(student: Student, settings: Settings) {
+  const exhausted = isChanceExhausted(student, settings);
+  const left = chanceRemaining(student, settings);
+  if (exhausted) {
+    return <span className="badge badge-fine">Chance used</span>;
+  }
+  return (
+    <span className={`badge badge-clear ${left === 1 ? "badge-settle" : ""}`}>
+      {left === 1 ? "Chance open" : `${left} chances left`}
+    </span>
+  );
+}
+
 export function RosterClient({
   initialStudents,
   settings,
@@ -37,10 +49,9 @@ export function RosterClient({
   const [name, setName] = useState("");
   const [roll, setRoll] = useState("");
   const [className, setClassName] = useState<string>(CLASS_OPTIONS[0]);
-  const [pending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [loggingId, setLoggingId] = useState<string | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [justLoggedId, setJustLoggedId] = useState<string | null>(null);
 
   const filtered = useMemo(
     () => students.filter((s) => matchesQuery(s, query)),
@@ -56,7 +67,7 @@ export function RosterClient({
     });
     const data = await res.json();
     if (!res.ok) {
-      toast({ title: "Could not add", detail: data.error, tone: "coral" });
+      toast({ title: "Could not add", detail: data.error, tone: "fine" });
       return;
     }
     setStudents((prev) =>
@@ -68,28 +79,7 @@ export function RosterClient({
     setRoll("");
     setClassName(CLASS_OPTIONS[0]);
     setShowAdd(false);
-    toast({ title: "Student added", tone: "teal" });
-  }
-
-  async function deleteStudent() {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      const res = await fetch(`/api/students/${deleteTarget.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        toast({ title: "Delete failed", detail: data.error, tone: "coral" });
-        return;
-      }
-      setStudents((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-      toast({ title: "Student removed", tone: "ink" });
-      setDeleteTarget(null);
-      startTransition(() => router.refresh());
-    } finally {
-      setDeleting(false);
-    }
+    toast({ title: "Student added", tone: "ink" });
   }
 
   async function logIncident(student: Student) {
@@ -118,25 +108,27 @@ export function RosterClient({
         setStudents((prev) =>
           prev.map((s) => (s.id === student.id ? student : s))
         );
-        toast({ title: "Log failed", detail: data.error, tone: "coral" });
+        toast({ title: "Log failed", detail: data.error, tone: "fine" });
         return;
       }
 
       setStudents((prev) =>
         prev.map((s) => (s.id === student.id ? (data.student as Student) : s))
       );
+      setJustLoggedId(student.id);
+      window.setTimeout(() => setJustLoggedId(null), 600);
 
       if (data.result_type === "chance_used") {
         toast({
           title: "Chance used",
           detail: `${student.name}: warning recorded. No fine.`,
-          tone: "amber",
+          tone: "warn",
         });
       } else {
         toast({
           title: `Fine +Rs ${data.amount}`,
           detail: `New total: Rs ${(data.student as Student).total_fine}`,
-          tone: "coral",
+          tone: "fine",
         });
       }
       startTransition(() => router.refresh());
@@ -144,184 +136,217 @@ export function RosterClient({
       setStudents((prev) =>
         prev.map((s) => (s.id === student.id ? student : s))
       );
-      toast({ title: "Network error", tone: "coral" });
+      toast({ title: "Network error", tone: "fine" });
     } finally {
       setLoggingId(null);
     }
   }
 
   return (
-    <div className="animate-rise pb-4">
+    <div className="pb-4">
       <header className="mb-5">
-        <p className="text-[12px] font-semibold text-teal tracking-wide uppercase">Computer Class</p>
-        <div className="mt-1 flex items-end justify-between gap-3">
-          <h1 className="font-display text-[1.85rem] font-extrabold leading-none text-ink">
-            Roster
-          </h1>
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="t13 font-medium text-muted">Computer Class</p>
+            <h1 className="t24 font-semibold text-ink">Roster</h1>
+          </div>
           <button
             type="button"
             onClick={() => setShowAdd((v) => !v)}
-            className="pressable rounded-full bg-ink px-3.5 py-2 text-[13px] font-semibold text-white"
+            className="btn btn-glass t13 px-4"
           >
             {showAdd ? "Close" : "Add Student"}
           </button>
         </div>
-        <p className="mt-2 text-[14px] text-muted">
-          Fine Rs {settings.fine_amount}{" "}
-          <span className="mx-1.5 opacity-30">|</span>{" "}
-          {settings.chances_allowed} chance
-          {settings.chances_allowed === 1 ? "" : "s"}
-        </p>
+        <div className="ledger-strip mt-4 grid grid-cols-2">
+          <div className="px-1 py-2.5">
+            <p className="t12 text-muted">Students</p>
+            <p className="num t18 font-medium text-ink">{students.length}</p>
+          </div>
+          <div className="px-1 py-2.5">
+            <p className="t12 text-muted">Fine</p>
+            <p className="num t18 font-medium text-ink">
+              Rs {settings.fine_amount}
+            </p>
+          </div>
+        </div>
       </header>
 
       {showAdd ? (
-        <div className="animate-pop mb-4 space-y-3 rounded-2xl border border-[var(--line)] bg-paper p-4 shadow-[var(--shadow)]">
+        <div
+          className="sheet-in mb-5 space-y-3 rounded-xl border border-[var(--line-strong)] bg-[var(--surface)] p-4"
+          role="group"
+          aria-label="Add student"
+        >
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Student name"
-            className="w-full rounded-xl border border-[var(--line)] bg-surface px-3.5 py-3 text-[16px] outline-none focus:border-teal"
+            className="field"
           />
           <input
             value={roll}
             onChange={(e) => setRoll(e.target.value)}
             placeholder="Roll number"
-            className="w-full rounded-xl border border-[var(--line)] bg-surface px-3.5 py-3 text-[16px] outline-none focus:border-teal"
+            className="field"
           />
           <div className="relative">
             <select
               value={className}
               onChange={(e) => setClassName(e.target.value)}
-              className="w-full appearance-none rounded-xl border border-[var(--line)] bg-surface px-3.5 py-3 text-[16px] outline-none focus:border-teal pr-10 cursor-pointer"
+              className="field pr-10"
             >
               {CLASS_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
             </select>
             <svg
+              aria-hidden
               className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
-              width="16" height="16" viewBox="0 0 16 16" fill="none"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
             >
-              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path
+                d="M4 6l4 4 4-4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
           <button
             type="button"
             onClick={addStudent}
-            className="pressable w-full rounded-xl bg-teal px-3 py-3 text-[14px] font-semibold text-white"
+            className="btn btn-primary w-full t15"
           >
             Save Student
           </button>
         </div>
       ) : null}
 
-      <div className="sticky top-0 z-20 -mx-1 mb-3 bg-gradient-to-b from-surface via-surface to-transparent px-1 pb-3 pt-1">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name or roll…"
-          autoCapitalize="none"
-          className="w-full rounded-2xl border border-[var(--line)] bg-paper px-4 py-3.5 text-[16px] shadow-sm outline-none focus:border-teal focus:ring-4 focus:ring-teal/10"
-        />
+      <div className="sticky top-0 z-20 -mx-4 mb-3 bg-gradient-to-b from-[var(--bg)] via-[var(--bg)] to-transparent px-4 pb-3 pt-1">
+        <div className="glass flex items-center rounded-xl px-3.5">
+          <svg
+            aria-hidden
+            className="mr-2.5 shrink-0 text-muted"
+            width="15"
+            height="15"
+            viewBox="0 0 16 16"
+            fill="none"
+          >
+            <circle
+              cx="7"
+              cy="7"
+              r="4.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            />
+            <path
+              d="M10.5 10.5L14 14"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+            />
+          </svg>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search name or roll number"
+            autoCapitalize="none"
+            aria-label="Search students by name or roll number"
+            className="w-full bg-transparent py-3 text-[16px] text-ink outline-none placeholder:text-muted"
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[var(--line)] px-4 py-10 text-center">
-          <p className="font-display text-lg font-bold text-ink">No students</p>
-          <p className="mt-1 text-[14px] text-muted">
+        <div className="rounded-xl border border-dashed border-[var(--line-strong)] px-4 py-12 text-center">
+          <p className="t15 font-medium text-ink">
             {students.length === 0
-              ? "Add your class to start logging."
-              : "Nothing matches that search."}
+              ? "Your register is empty"
+              : "No students match that search"}
+          </p>
+          <p className="t13 mx-auto mt-1.5 max-w-[32ch] text-muted">
+            {students.length === 0
+              ? "Use Add Student above to enter your first name and roll number, then log incidents straight from this list."
+              : "Check the spelling, or clear the search to see the full roster."}
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <div className="register">
           {filtered.map((student) => {
             const exhausted = isChanceExhausted(student, settings);
-            const left = chanceRemaining(student, settings);
+            const isLogging = loggingId === student.id;
             return (
-              <li
-                key={student.id}
-                className="flex items-stretch gap-2 rounded-2xl border border-[var(--line)] bg-paper p-2 shadow-[0_4px_16px_rgba(19,34,31,0.04)]"
-              >
+              <div key={student.id} className="register-row">
                 <Link
                   href={`/students/${student.id}`}
-                  className="pressable min-w-0 flex-1 rounded-xl px-3 py-2.5"
+                  prefetch
+                  className="min-w-0 flex-1 rounded-lg py-0.5"
                 >
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="truncate font-display text-[17px] font-bold text-ink">
+                    <p className="t15 truncate font-medium text-ink">
                       {student.name}
                     </p>
-                    <span className="shrink-0 text-[12px] font-semibold text-muted">
+                    <span className="num t13 shrink-0 text-muted">
                       {student.roll_no}
                     </span>
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-[12px] font-semibold">
-                    {student.class_name && (
-                      <span className="rounded-full bg-[var(--fog)] px-2 py-0.5 text-[11px] font-semibold text-muted">
-                        {student.class_name}
-                      </span>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                    {student.class_name ? (
+                      <span className="t12 text-muted">{student.class_name}</span>
+                    ) : null}
+                    {justLoggedId === student.id ? (
+                      exhausted ? (
+                        <span className="badge badge-fine badge-settle">
+                          Chance used
+                        </span>
+                      ) : (
+                        <span className="badge badge-clear badge-settle">
+                          {chanceRemaining(student, settings) === 1
+                            ? "Chance open"
+                            : `${chanceRemaining(student, settings)} chances left`}
+                        </span>
+                      )
+                    ) : (
+                      statusBadge(student, settings)
                     )}
                     <span
-                      className={`rounded-full px-2 py-0.5 ${
-                        exhausted
-                          ? "bg-coral/10 text-coral"
-                          : "bg-teal/10 text-teal-deep"
+                      className={`num t13 font-medium ${
+                        student.total_fine > 0 ? "text-fine-text" : "text-muted"
                       }`}
                     >
-                      {exhausted
-                        ? "Chance used"
-                        : left === 1
-                          ? "Chance open"
-                          : `${left} chances left`}
-                    </span>
-                    <span className="text-muted">
                       Rs {student.total_fine}
                     </span>
                   </div>
                 </Link>
-                <div className="flex flex-col gap-1.5">
+                <div className="flex shrink-0 items-center">
                   <button
                     type="button"
-                    disabled={loggingId === student.id || pending}
+                    disabled={isLogging}
                     onClick={() => logIncident(student)}
-                    className={`pressable flex w-[5rem] shrink-0 flex-1 flex-col items-center justify-center rounded-xl text-[12px] font-bold text-white ${
-                      exhausted ? "bg-coral" : "bg-amber"
-                    } disabled:opacity-50`}
+                    className={`btn font-display t13 h-11 px-3.5 ${
+                      exhausted ? "btn-danger" : "btn-accent"
+                    }`}
                   >
-                    <span className="text-[11px] font-semibold opacity-90">
-                      Log
-                    </span>
-                    <span>{exhausted ? "Fine" : "Chance"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(student)}
-                    className="pressable flex w-[5rem] shrink-0 items-center justify-center rounded-xl bg-[var(--fog)] py-1.5 text-[11px] font-semibold text-coral hover:bg-coral/10"
-                    title="Remove student"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" className="mr-0.5">
-                      <path d="M2 4h12M5 4V2.5A1.5 1.5 0 016.5 1h3A1.5 1.5 0 0111 2.5V4m2 0l-.8 9.2A1.5 1.5 0 0110.7 14.5H5.3A1.5 1.5 0 013.8 13.2L3 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    Del
+                    {isLogging
+                      ? "…"
+                      : exhausted
+                        ? "Fine"
+                        : "Log"}
                   </button>
                 </div>
-              </li>
+              </div>
             );
           })}
-        </ul>
+        </div>
       )}
 
-      <ConfirmModal
-        open={deleteTarget !== null}
-        title="Remove student?"
-        detail={`This will permanently delete ${deleteTarget?.name ?? "this student"} and their entire incident history. This cannot be undone.`}
-        confirmLabel="Yes, delete"
-        tone="coral"
-        busy={deleting}
-        onConfirm={deleteStudent}
-        onCancel={() => setDeleteTarget(null)}
-      />
     </div>
   );
 }

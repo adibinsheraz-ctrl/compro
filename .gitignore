@@ -39,6 +39,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# font source kits (only the used files ship in src/fonts)
+/BespokeStencil_Complete
+/oh-my-notes-font
+
+# app local state
+/.freebuff
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

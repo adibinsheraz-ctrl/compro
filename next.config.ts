@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Treeshake barrel imports (zod) so server bundles stay lean.
+    optimizePackageImports: ["zod"],
+  },
 };
 
 export default nextConfig;

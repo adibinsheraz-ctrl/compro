@@ -51,7 +51,6 @@ export async function getValidSessionId(): Promise<string | null> {
   if (!sessionId) return null;
 
   const db = getAdminDb();
-  const now = new Date().toISOString();
 
   const { data, error } = await db
     .from("sessions")
@@ -61,15 +60,10 @@ export async function getValidSessionId(): Promise<string | null> {
 
   if (error || !data) return null;
   if (new Date(data.expires_at).getTime() <= Date.now()) {
-    await db.from("sessions").delete().eq("id", sessionId);
+    // Expired: clean up without blocking the response on the delete.
+    void db.from("sessions").delete().eq("id", sessionId);
     return null;
   }
-
-  // Touch last_seen without blocking the request hard
-  void db
-    .from("sessions")
-    .update({ last_seen_at: now })
-    .eq("id", sessionId);
 
   return data.id as string;
 }
