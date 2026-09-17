@@ -281,11 +281,17 @@ export function StudentDetailClient({
       <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            setName(student.name);
+            setRoll(student.roll_no);
+            setClassName(student.class_name || "");
+            setEditing(true);
+          }}
           className="btn btn-glass flex-1 t13"
         >
           Edit Details
         </button>
+
         <button
           type="button"
           onClick={() => setShowLog((v) => !v)}

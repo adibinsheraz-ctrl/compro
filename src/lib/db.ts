@@ -116,48 +116,35 @@ export async function createStudent(input: {
   class_name?: string;
 }): Promise<Student> {
   const db = getAdminDb();
+  const payload: Record<string, any> = {
+    name: input.name.trim(),
+    roll_no: input.roll_no.trim(),
+  };
   if (input.class_name) {
-    try {
-      const res = await db
-        .from("students")
-        .insert({
-          name: input.name.trim(),
-          roll_no: input.roll_no.trim(),
-          class_name: input.class_name.trim(),
-        })
-        .select("*")
-        .single();
-
-      if (!res.error && res.data) {
-        return res.data as Student;
-      }
-      // If the error is due to column not existing in DB, fallback to insert without class_name
-      if (res.error && (res.error.message.includes("class_name") || res.error.code === "42703" || res.error.code === "PGRST204")) {
-        console.warn("class_name column not found in students table, falling back to standard insert");
-      } else if (res.error) {
-        throw new Error(res.error.message);
-      }
-    } catch (e: any) {
-      if (e?.message && !e.message.includes("class_name")) {
-        throw e;
-      }
-    }
+    payload.class_name = input.class_name.trim();
   }
 
-  const { data, error } = await db
+  const res = await db
     .from("students")
-    .insert({
-      name: input.name.trim(),
-      roll_no: input.roll_no.trim(),
-    })
+    .insert(payload)
     .select("*")
     .single();
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create student");
+  if (!res.error && res.data) {
+    return res.data as Student;
   }
 
-  return data as Student;
+  if (res.error && (res.error.message.includes("class_name") || res.error.code === "42703")) {
+    throw new Error(
+      "The 'class_name' column does not exist in your Supabase database yet. Please run this SQL in your Supabase SQL Editor: ALTER TABLE public.students ADD COLUMN IF NOT EXISTS class_name text DEFAULT 'RCSB 1';"
+    );
+  }
+
+  if (res.error) {
+    throw new Error(res.error.message);
+  }
+
+  return res.data as Student;
 }
 
 export async function updateStudent(
@@ -165,45 +152,40 @@ export async function updateStudent(
   input: { name: string; roll_no: string; class_name?: string }
 ): Promise<Student> {
   const db = getAdminDb();
-  if (input.class_name !== undefined) {
-    try {
-      const res = await db
-        .from("students")
-        .update({
-          name: input.name.trim(),
-          roll_no: input.roll_no.trim(),
-          class_name: input.class_name.trim(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id)
-        .select("*")
-        .single();
+  const updatePayload: Record<string, any> = {
+    name: input.name.trim(),
+    roll_no: input.roll_no.trim(),
+    updated_at: new Date().toISOString(),
+  };
 
-      if (!res.error && res.data) {
-        return res.data as Student;
-      }
-    } catch {
-      // Fallback if class_name doesn't exist
-    }
+  if (input.class_name !== undefined) {
+    updatePayload.class_name = input.class_name.trim();
   }
 
-  const { data, error } = await db
+  const res = await db
     .from("students")
-    .update({
-      name: input.name.trim(),
-      roll_no: input.roll_no.trim(),
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", id)
     .select("*")
     .single();
 
-  if (error || !data) {
-    throw new Error(error?.message ?? "Failed to update student");
+  if (!res.error && res.data) {
+    return res.data as Student;
   }
 
-  return data as Student;
+  if (res.error && (res.error.message.includes("class_name") || res.error.code === "42703")) {
+    throw new Error(
+      "The 'class_name' column does not exist in your Supabase database yet. Please run this SQL in your Supabase SQL Editor: ALTER TABLE public.students ADD COLUMN IF NOT EXISTS class_name text DEFAULT 'RCSB 1';"
+    );
+  }
+
+  if (res.error) {
+    throw new Error(res.error.message);
+  }
+
+  return res.data as Student;
 }
+
 
 export async function deleteStudent(id: string): Promise<void> {
   const db = getAdminDb();

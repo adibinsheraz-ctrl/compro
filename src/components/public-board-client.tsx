@@ -165,13 +165,15 @@ export function PublicBoardClient({
         student.roll_no.toLowerCase().includes(q) ||
         (student.class_name && student.class_name.toLowerCase().includes(q));
 
+      const studentClass = student.class_name ? student.class_name.trim() : "RCSB 1";
       const matchesSection =
         selectedClass === "All" ||
-        student.class_name === selectedClass ||
-        (!student.class_name && selectedClass === "RCSB 1");
+        studentClass.toLowerCase() === selectedClass.toLowerCase() ||
+        studentClass.replace(/\s+/g, "").toLowerCase() === selectedClass.replace(/\s+/g, "").toLowerCase();
 
       return matchesText && matchesSection;
     });
+
 
     return list.sort((a, b) => {
       const aUsed = a.chances_used >= settings.chances_allowed;
@@ -324,12 +326,11 @@ export function PublicBoardClient({
                     <span className="num t13 shrink-0 text-muted">
                       #{student.roll_no}
                     </span>
-                    {student.class_name ? (
-                      <span className="t12 font-medium text-accent-bright shrink-0 text-muted">
-                        {student.class_name}
-                      </span>
-                    ) : null}
+                    <span className="t12 font-medium shrink-0 text-muted">
+                      {student.class_name || "RCSB 1"}
+                    </span>
                   </div>
+
 
                   <div className="mt-1 flex items-center gap-2">
                     {/* Chance Status Badge */}
