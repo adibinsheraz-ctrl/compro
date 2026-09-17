@@ -11,6 +11,16 @@ export type Student = {
   updated_at: string;
 };
 
+export type PublicStudent = {
+  id: string;
+  name: string;
+  roll_no: string;
+  class_name?: string;
+  chances_used: number;
+  total_fine: number;
+};
+
+
 export type Incident = {
   id: string;
   student_id: string;
@@ -26,6 +36,12 @@ export type Settings = {
   chances_allowed: number;
   updated_at: string;
 };
+
+export type PublicSettings = {
+  fine_amount: number;
+  chances_allowed: number;
+};
+
 
 export type LogIncidentResult = {
   incident: Incident;

@@ -1,5 +1,53 @@
 import { getAdminDb } from "./supabase";
-import type { Incident, LogIncidentResult, Settings, Student } from "./types";
+import type {
+  Incident,
+  LogIncidentResult,
+  PublicSettings,
+  PublicStudent,
+  Settings,
+  Student,
+} from "./types";
+
+export async function getPublicSettings(): Promise<PublicSettings> {
+  const db = getAdminDb();
+  const { data, error } = await db
+    .from("settings")
+    .select("fine_amount, chances_allowed")
+    .eq("id", 1)
+    .single();
+
+  if (error || !data) {
+    return { fine_amount: 50, chances_allowed: 1 };
+  }
+
+  return data as PublicSettings;
+}
+
+export async function listPublicStudents(): Promise<PublicStudent[]> {
+  const db = getAdminDb();
+  try {
+    const { data, error } = await db
+      .from("students")
+      .select("id, name, roll_no, class_name, chances_used, total_fine")
+      .order("name", { ascending: true });
+
+    if (!error && data) {
+      return data as PublicStudent[];
+    }
+  } catch {
+    // column class_name may not exist yet
+  }
+
+  const { data, error } = await db
+    .from("students")
+    .select("id, name, roll_no, chances_used, total_fine")
+    .order("name", { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return (data ?? []) as PublicStudent[];
+}
+
+
 
 export async function getSettings(): Promise<Settings> {
   const db = getAdminDb();
